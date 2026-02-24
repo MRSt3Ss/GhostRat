@@ -54,8 +54,8 @@ def tcp_listener():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
-    # FIX: Set TCP Port ke 2212
-    tcp_port = 2212 
+    # FIX: Set TCP Port ke 3331
+    tcp_port = 3331 
     server.bind(('0.0.0.0', tcp_port))
     server.listen(1)
     add_log(f"[*] TCP Server listening on port {tcp_port}")
